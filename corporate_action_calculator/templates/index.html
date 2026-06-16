@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corporate Action Calculator (FNO Adjustments Methodology & Examples)</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom styling -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+
+    <!-- Header / Navbar -->
+    <header class="bg-dark text-white py-4 shadow-sm border-bottom border-primary border-3">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="badge bg-primary text-white mb-2 uppercase tracking-wide">FNO DERIVATIVES RULES</div>
+                    <h1 class="h2 font-weight-bold mb-1">
+                        <i class="fa-solid fa-calculator text-primary-emphasis me-2"></i>
+                        Corporate Action Calculator
+                    </h1>
+                    <p class="lead fs-6 text-light-emphasis mb-0">Futures & Options Adjustments Methodology & Examples</p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <span class="badge bg-secondary font-monospace p-2 border border-secondary-subtle">
+                        NSE / SEBI Rules Compliant
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs for views -->
+    <div class="bg-white border-bottom sticky-top shadow-sm py-2">
+        <div class="container">
+            <ul class="nav nav-pills gap-2" id="mainTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active px-4 py-2 font-weight-bold" id="calcs-tab-btn" data-bs-toggle="pill" data-bs-target="#calcs-pane" type="button" role="tab" aria-selected="true">
+                        <i class="fa-solid fa-calculator me-2"></i>Adjustment Calculators
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-4 py-2 font-weight-bold" id="method-tab-btn" data-bs-toggle="pill" data-bs-target="#method-pane" type="button" role="tab" aria-selected="false">
+                        <i class="fa-solid fa-book me-2"></i>FNO Regulatory Methodology
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link px-4 py-2 font-weight-bold" id="examples-tab-btn" data-bs-toggle="pill" data-bs-target="#examples-pane" type="button" role="tab" aria-selected="false">
+                        <i class="fa-solid fa-award me-2"></i>Real Corporate Examples
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <main class="container py-4">
+
+        <!-- Banner / Notification Toast placeholder -->
+        <div id="toast-wrapper" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+            <div id="action-toast" class="toast align-items-center text-white bg-dark border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fa-solid fa-check-circle text-success me-2"></i> <span id="toast-text">Action completed successfully</span>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="mainTabContent">
+
+            <!-- PANE 1: CALCULATORS -->
+            <div class="tab-pane fade show active" id="calcs-pane" role="tabpanel" tabindex="0">
+                <div class="row g-4">
+                    
+                    <!-- Calculator Event Selector -->
+                    <div class="col-lg-3">
+                        <span class="text-uppercase text-secondary fs-7 font-weight-bold tracking-wider mb-2 d-block">Select Corporate Event</span>
+                        <div class="list-group shadow-sm sticky-top" style="top: 80px;" id="calcSelector" role="tablist">
+                            <button class="list-group-item list-group-item-action active p-3 d-flex flex-column align-items-start" id="bonus-list-btn" data-bs-toggle="list" href="#bonus-calc" role="tab">
+                                <span class="fw-bold fs-6">Bonus Issue</span>
+                                <small class="text-light-emphasis mt-1 fs-7">Free shares in proportion (e.g. 1:3)</small>
+                            </button>
+                            <button class="list-group-item list-group-item-action p-3 d-flex flex-column align-items-start" id="split-list-btn" data-bs-toggle="list" href="#split-calc" role="tab">
+                                <span class="fw-bold fs-6">Stock Split</span>
+                                <small class="text-secondary mt-1 fs-7">Existing shares divided (e.g. 2:1)</small>
+                            </button>
+                            <button class="list-group-item list-group-item-action p-3 d-flex flex-column align-items-start" id="dividend-list-btn" data-bs-toggle="list" href="#dividend-calc" role="tab">
+                                <span class="fw-bold fs-6">Extraordinary Dividend</span>
+                                <small class="text-secondary mt-1 fs-7">Payouts >= 5% of settlement base</small>
+                            </button>
+                            <button class="list-group-item list-group-item-action p-3 d-flex flex-column align-items-start" id="rights-list-btn" data-bs-toggle="list" href="#rights-calc" role="tab">
+                                <span class="fw-bold fs-6">Rights Issue</span>
+                                <small class="text-secondary mt-1 fs-7">Discounted share buy subscription</small>
+                            </button>
+                        </div>
+
+                        <div class="card mt-4 bg-dark text-white border-0 shadow-sm">
+                            <div class="card-body p-3 fs-7">
+                                <div class="fw-bold uppercase mb-2 text-primary-emphasis text-uppercase tracking-wider">
+                                    <i class="fa-solid fa-circle-info text-primary me-1"></i> F&O Neutrality
+                                </div>
+                                <p class="mb-2 text-light-emphasis">Contract adjustments are built to preserve equivalent financial exposure of derivatives positions pre and post-event.</p>
+                                <hr class="border-secondary">
+                                <span class="font-monospace text-secondary" style="font-size: 10px;">Calculated instantly according to official stock exchange specifications.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calculator Tab Panes -->
+                    <div class="col-lg-9">
+                        
+                        <!-- Actions Toolbar -->
+                        <div class="bg-dark text-white rounded-3 p-3 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-xs">
+                            <div>
+                                <span class="fw-bold text-primary-emphasis bg-secondary bg-opacity-25 border border-secondary border-opacity-50 px-3 py-1.5 rounded-3 fs-6">
+                                    Live Calculator Outputs
+                                </span>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-light text-nowrap" id="reset-btn">
+                                    <i class="fa-solid fa-redo me-1.5 text-secondary"></i>Reset
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-light text-nowrap" id="copy-btn">
+                                    <i class="fa-solid fa-copy me-1.5 text-secondary"></i>Copy Results
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-light text-nowrap" id="print-btn">
+                                    <i class="fa-solid fa-print me-1.5 text-secondary"></i>Print
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary text-nowrap" id="pdf-btn">
+                                    <i class="fa-solid fa-file-pdf me-1.5"></i>Export to PDF
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Calculators container -->
+                        <div class="tab-content" id="calculatorsContent">
+                            
+                            <!-- TAB 1: BONUS ISSUE -->
+                            <div class="tab-pane fade show active" id="bonus-calc" role="tabpanel">
+                                <div class="row g-4">
+                                    <!-- Inputs -->
+                                    <div class="col-md-6">
+                                        <div class="card border-0 shadow-sm rounded-3 h-100">
+                                            <div class="card-body p-4">
+                                                <h4 class="card-title fw-bold fs-6 text-dark border-bottom pb-2 mb-4">
+                                                    <i class="fa-solid fa-gear text-primary-emphasis me-2"></i>Input Parameters
+                                                </h4>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label text-uppercase text-secondary fw-semibold fs-7 tracking-wider">Bonus Ratio (Granted : Existing)</label>
+                                                    <div class="row g-2">
+                                                        <div class="col">
+                                                            <input type="number" class="form-control fw-bold" id="b-num" value="1" min="1">
+                                                            <small class="text-secondary fs-7 mt-1 d-block">Bonus Shares</small>
+                                                        </div>
+                                                        <div class="col-auto align-self-center font-monospace font-weight-bold text-secondary">for</div>
+                                                        <div class="col">
+                                                            <input type="number" class="form-control fw-bold" id="b-den" value="3" min="1">
+                                                            <small class="text-secondary fs-7 mt-1 d-block">Existing Shares</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label text-semibold text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="b-strike">Old Strike Price (₹)</label>
+                                                    <input type="number" step="0.05" class="form-control fw-bold" id="b-strike" value="200">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label text-semibold text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="b-futures">Old Futures Price (₹)</label>
+                                                    <input type="number" step="0.05" class="form-control fw-bold" id="b-futures" value="205.5">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label text-semibold text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="b-lot">Old Lot Size</label>
+                                                    <input type="number" class="form-control fw-bold" id="b-lot" value="3000">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Outputs -->
+                                    <div class="col-md-6">
+                                        <div class="card bg-dark text-white border-0 shadow-lg rounded-3 h-100 d-flex flex-column justify-content-between">
+                                            <div class="card-body p-4">
+                                                <h4 class="card-title fw-bold fs-6 border-bottom border-secondary pb-2 mb-4 d-flex justify-content-between align-items-center">
+                                                    <span><i class="fa-solid fa-chart-line text-info me-2"></i>Adjustment Outputs</span>
+                                                    <span class="badge bg-primary bg-opacity-25 text-primary fs-7 px-2 py-1">Active</span>
+                                                </h4>
+
+                                                <div class="bg-secondary bg-opacity-10 border border-secondary border-opacity-25 rounded p-3 mb-4 d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <span class="text-secondary fs-7 block">Adjustment Factor</span>
+                                                        <h5 class="fw-bold mb-0 text-success font-monospace" id="out-b-fac">1.333333</h5>
+                                                    </div>
+                                                    <small class="text-secondary text-end font-monospace" id="out-b-formula">ratio (1 + 3)/3</small>
+                                                </div>
+
+                                                <div class="space-y shadow-xs font-monospace">
+                                                    <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-20">
+                                                        <span class="text-light-emphasis">New Strike Price</span>
+                                                        <span class="text-white fw-bold fs-5" id="out-b-strike">₹150.00</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-20">
+                                                        <span class="text-light-emphasis">New Futures Price</span>
+                                                        <span class="text-white fw-bold" id="out-b-futures">₹154.12</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-2">
+                                                        <span class="text-light-emphasis">New Lot Size</span>
+                                                        <span class="text-info fw-bold fs-5" id="out-b-lot">4000</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="p-3 bg-secondary bg-opacity-10 rounded-bottom-3 border-top border-secondary border-opacity-25">
+                                                <small class="text-secondary d-block lh-sm fs-7">
+                                                    <strong>Methodology:</strong> Dividends, splits, and bonus events require dividing underlying strike/futures prices by the factor, whilst lot sizes are multiplied.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 2: STOCK SPLIT -->
+                            <div class="tab-pane fade" id="split-calc" role="tabpanel">
+                                <div class="row g-4">
+                                    <!-- Inputs -->
+                                    <div class="col-md-6">
+                                        <div class="card border-0 shadow-sm rounded-3 h-100">
+                                            <div class="card-body p-4">
+                                                <h4 class="card-title fw-bold fs-6 text-dark border-bottom pb-2 mb-4">
+                                                    <i class="fa-solid fa-gear text-primary-emphasis me-2"></i>Input Parameters
+                                                </h4>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="s-ratio">Split Ratio (Splitting Factor)</label>
+                                                    <input type="number" class="form-control fw-bold" id="s-ratio" value="2" min="1">
+                                                    <small class="text-secondary fs-7 mt-1 d-block">e.g. 2 for a 2-for-1 stock split</small>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label text-semibold text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="s-strike">Old Strike Price (₹)</label>
+                                                    <input type="number" step="0.05" class="form-control fw-bold" id="s-strike" value="5000">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label text-semibold text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="s-futures">Old Futures Price (₹)</label>
+                                                    <input type="number" step="0.05" class="form-control fw-bold" id="s-futures" value="5035">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label text-semibold text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="s-lot">Old Lot Size</label>
+                                                    <input type="number" class="form-control fw-bold" id="s-lot" value="125">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Outputs -->
+                                    <div class="col-md-6">
+                                        <div class="card bg-dark text-white border-0 shadow-lg rounded-3 h-100 d-flex flex-column justify-content-between">
+                                            <div class="card-body p-4">
+                                                <h4 class="card-title fw-bold fs-6 border-bottom border-secondary pb-2 mb-4 d-flex justify-content-between align-items-center">
+                                                    <span><i class="fa-solid fa-chart-line text-info me-2"></i>Adjustment Outputs</span>
+                                                    <span class="badge bg-primary bg-opacity-25 text-primary fs-7 px-2 py-1">Active</span>
+                                                </h4>
+
+                                                <div class="bg-secondary bg-opacity-10 border border-secondary border-opacity-25 rounded p-3 mb-4 d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <span class="text-secondary fs-7 block">Stock Split Factor</span>
+                                                        <h5 class="fw-bold mb-0 text-success font-monospace" id="out-s-fac">2.00</h5>
+                                                    </div>
+                                                </div>
+
+                                                <div class="space-y shadow-xs font-monospace">
+                                                    <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-20">
+                                                        <span class="text-light-emphasis">New Strike Price</span>
+                                                        <span class="text-white fw-bold fs-5" id="out-s-strike">₹2500.00</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-20">
+                                                        <span class="text-light-emphasis">New Futures Price</span>
+                                                        <span class="text-white fw-bold" id="out-s-futures">₹2517.50</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-2">
+                                                        <span class="text-light-emphasis">New Lot Size</span>
+                                                        <span class="text-info fw-bold fs-5" id="out-s-lot">250</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="p-3 bg-secondary bg-opacity-10 rounded-bottom-3 border-top border-secondary border-opacity-25">
+                                                <small class="text-secondary d-block lh-sm fs-7">
+                                                    <strong>Methodology:</strong> In a split, prices are divided and lot sizing multiplied according to the split ratio. Total contract value is completely preserved.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 3: DIVIDEND -->
+                            <div class="tab-pane fade" id="dividend-calc" role="tabpanel">
+                                <div class="row g-4">
+                                    <!-- Inputs -->
+                                    <div class="col-md-6">
+                                        <div class="card border-0 shadow-sm rounded-3 h-100">
+                                            <div class="card-body p-4">
+                                                <h4 class="card-title fw-bold fs-6 text-dark border-bottom pb-2 mb-4">
+                                                    <i class="fa-solid fa-gear text-primary-emphasis me-2"></i>Input Parameters
+                                                </h4>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="d-dividend">Dividend Amount (₹)</label>
+                                                    <input type="number" step="0.05" class="form-control fw-bold" id="d-dividend" value="22.75">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label text-semibold text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="d-settle">Futures Settlement Price (₹)</label>
+                                                    <input type="number" step="0.05" class="form-control fw-bold" id="d-settle" value="310">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label text-semibold text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="d-strike">Existing Strike Price (₹)</label>
+                                                    <input type="number" step="0.05" class="form-control fw-bold" id="d-strike" value="300">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Outputs -->
+                                    <div class="col-md-6">
+                                        <div class="card bg-dark text-white border-0 shadow-lg rounded-3 h-100 d-flex flex-column justify-content-between">
+                                            <div class="card-body p-4">
+                                                <h4 class="card-title fw-bold fs-6 border-bottom border-secondary pb-2 mb-4 d-flex justify-content-between align-items-center">
+                                                    <span><i class="fa-solid fa-chart-line text-info me-2"></i>Adjustment Outputs</span>
+                                                    <span class="badge bg-primary bg-opacity-25 text-primary fs-7 px-2 py-1">Active</span>
+                                                </h4>
+
+                                                <div class="p-3 rounded-3 mb-4 border d-flex gap-2" id="out-d-alert">
+                                                    <i class="fa-solid fa-info-circle my-auto"></i>
+                                                    <div class="fs-7">
+                                                        <span class="fw-bold d-block" id="out-d-header">CHECKING THRESHOLD...</span>
+                                                        <span id="out-d-body">Dividend status text</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="space-y shadow-xs font-monospace">
+                                                    <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-20">
+                                                        <span class="text-light-emphasis">Dividend Payout</span>
+                                                        <span class="text-success fw-bold" id="out-d-amount">₹22.75</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-20">
+                                                        <span class="text-light-emphasis">New Futures Price</span>
+                                                        <span class="text-white fw-bold fs-5" id="out-d-futures">₹287.25</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-2">
+                                                        <span class="text-light-emphasis">New Strike Price</span>
+                                                        <span class="text-white fw-bold fs-5" id="out-d-strike">₹277.25</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="p-3 bg-secondary bg-opacity-10 rounded-bottom-3 border-top border-secondary border-opacity-25">
+                                                <small class="text-secondary d-block lh-sm fs-7">
+                                                    <strong>Important Note:</strong> Adjustment applies only if the dividend payment exceeds the 5% SEBI regulatory threshold of the underlying market price.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 4: RIGHTS ISSUE -->
+                            <div class="tab-pane fade" id="rights-calc" role="tabpanel">
+                                <div class="row g-4">
+                                    <!-- Inputs -->
+                                    <div class="col-md-6">
+                                        <div class="card border-0 shadow-sm rounded-3 h-100">
+                                            <div class="card-body p-4">
+                                                <h4 class="card-title fw-bold fs-6 text-dark border-bottom pb-2 mb-4">
+                                                    <i class="fa-solid fa-gear text-primary-emphasis me-2"></i>Input Parameters
+                                                </h4>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label text-uppercase text-secondary fw-semibold fs-7 tracking-wider">Rights Ratio (Rights Shares : Existing)</label>
+                                                    <div class="row g-2">
+                                                        <div class="col">
+                                                            <input type="number" class="form-control fw-bold" id="r-num" value="1" min="1">
+                                                            <small class="text-secondary fs-7 mt-1 d-block">Rights Shares</small>
+                                                        </div>
+                                                        <div class="col-auto align-self-center font-monospace text-secondary">for</div>
+                                                        <div class="col">
+                                                            <input type="number" class="form-control fw-bold" id="r-den" value="9" min="1">
+                                                            <small class="text-secondary fs-7 mt-1 d-block">Existing Shares</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label text-semibold text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="r-issue-p">Rights Issue Price (₹)</label>
+                                                    <input type="number" step="0.05" class="form-control fw-bold" id="r-issue-p" value="104.5">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label text-semibold text-uppercase text-secondary fw-semibold fs-7 tracking-wider" for="r-cum-p">Cum-Rights Market Price (₹)</label>
+                                                    <input type="number" step="0.05" class="form-control fw-bold" id="r-cum-p" value="150">
+                                                </div>
+
+                                                <hr class="border-light-emphasis">
+                                                <small class="text-muted text-uppercase fw-bold fs-7 mb-2 d-block">Strike / Contract Settings</small>
+
+                                                <div class="row g-2 mb-2">
+                                                    <div class="col">
+                                                        <label class="form-label fs-7" for="r-strike">Old Strike Price (₹)</label>
+                                                        <input type="number" step="0.05" class="form-control form-control-sm fw-bold" id="r-strike" value="180">
+                                                    </div>
+                                                    <div class="col">
+                                                        <label class="form-label fs-7" for="r-futures">Old Futures Price (₹)</label>
+                                                        <input type="number" step="0.05" class="form-control form-control-sm fw-bold" id="r-futures" value="184.2">
+                                                    </div>
+                                                    <div class="col">
+                                                        <label class="form-label fs-7" for="r-lot">Old Lot Size</label>
+                                                        <input type="number" class="form-control form-control-sm fw-bold" id="r-lot" value="1500">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Outputs -->
+                                    <div class="col-md-6">
+                                        <div class="card bg-dark text-white border-0 shadow-lg rounded-3 h-100 d-flex flex-column justify-content-between">
+                                            <div class="card-body p-4">
+                                                <h4 class="card-title fw-bold fs-6 border-bottom border-secondary pb-2 mb-4 d-flex justify-content-between align-items-center">
+                                                    <span><i class="fa-solid fa-chart-line text-info me-2"></i>Adjustment Outputs</span>
+                                                    <span class="badge bg-primary bg-opacity-25 text-primary fs-7 px-2 py-1">Active</span>
+                                                </h4>
+
+                                                <div class="p-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25 rounded-3 mb-4 row g-2">
+                                                    <div class="col-6">
+                                                        <span class="text-secondary fs-7 block d-block">Ex-Rights Price (TERP)</span>
+                                                        <h5 class="fw-bold mb-0 text-success font-monospace" id="out-r-terp">₹145.45</h5>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <span class="text-secondary fs-7 block d-block text-end">Adjustment Factor</span>
+                                                        <h5 class="fw-bold mb-0 text-info font-monospace text-end" id="out-r-fac">0.969670</h5>
+                                                    </div>
+                                                </div>
+
+                                                <div class="space-y shadow-xs font-monospace">
+                                                    <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-20">
+                                                        <span class="text-light-emphasis">New Strike Price</span>
+                                                        <span class="text-white fw-bold fs-5" id="out-r-strike">₹174.54</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-20">
+                                                        <span class="text-light-emphasis">New Futures Price</span>
+                                                        <span class="text-white fw-bold" id="out-r-futures">₹178.61</span>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between py-21">
+                                                        <span class="text-light-emphasis">New Lot Size</span>
+                                                        <span class="text-info fw-bold fs-5" id="out-r-lot">1547</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="p-3 bg-secondary bg-opacity-10 rounded-bottom-3 border-top border-secondary border-opacity-25">
+                                                <small class="text-secondary d-block lh-sm fs-7">
+                                                    <strong>Methodology Note:</strong> Theoretical Ex-Rights Price (TERP) and market pricing determines adjustment factor. Options strike prices adjust proportionally, and lot sizing scales inverted.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- PANE 2: METHODOLOGY ACCORDION -->
+            <div class="tab-pane fade" id="method-pane" role="tabpanel" tabindex="0">
+                <div class="bg-white border rounded-3 p-4 p-md-5 shadow-sm">
+                    <div class="border-bottom pb-3 mb-4">
+                        <h2 class="h4 fw-bold text-dark"><i class="fa-solid fa-book-open text-primary me-2"></i>FNO Regulatory Corporate Action Adjustments</h2>
+                        <p class="text-secondary mb-0">Official exchange methodologies, circulars, and formulas utilized to compute derivatives contracts restructuring events.</p>
+                    </div>
+
+                    <div class="accordion" id="methodologyAccordion">
+                        
+                        <!-- Accordion 1: Bonus -->
+                        <div class="accordion-item border border-grey-200 mb-3 rounded-xl overflow-hidden shadow-xs">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button fw-bold py-3 text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBonus" aria-expanded="true">
+                                    <span class="me-2 text-primary">●</span> Bonus Issue Methodology
+                                </button>
+                            </h2>
+                            <div id="collapseBonus" class="accordion-collapse collapse show" data-bs-parent="#methodologyAccordion">
+                                <div class="accordion-body text-secondary fs-7 leading-relaxed">
+                                    <p>When bonus shares are issued, shareholders receive additional shares without incurring cash expenses. This increases total shared volume outstanding and decreases market value per share proportionally.</p>
+                                    
+                                    <div class="bg-light border p-3 rounded mb-3 font-monospace">
+                                        <div class="fw-bold text-dark text-uppercase fs-7 mb-1">Adjustment Factor formula</div>
+                                        <div class="bg-dark text-success p-2.5 rounded text-xs">
+                                            Adjustment Factor = (Bonus Ratio Numerator + Bonus Ratio Denominator) / Bonus Ratio Denominator
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <div class="p-3 bg-light rounded border">
+                                                <strong>Options Striking Prices:</strong> Divided by adjustment factor and rounded off to nearest tick of ₹0.05.
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="p-3 bg-light rounded border">
+                                                <strong>Futures Base Rates:</strong> Divided by adjustment factor and rounded according to futures tick formatting.
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="p-3 bg-light rounded border">
+                                                <strong>FNO Lot Size:</strong> Multiplied by adjustment factor so total outstanding base risk is maintained.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Accordion 2: Splits -->
+                        <div class="accordion-item border border-grey-200 mb-3 rounded-xl overflow-hidden shadow-xs">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-bold py-3 text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSplit" aria-expanded="false">
+                                    <span class="me-2 text-primary">●</span> Stock Split Adjustment Methodology
+                                </button>
+                            </h2>
+                            <div id="collapseSplit" class="accordion-collapse collapse" data-bs-parent="#methodologyAccordion">
+                                <div class="accordion-body text-secondary fs-7 leading-relaxed">
+                                    <p>A stock split is designed to partition individual shares, changing total floats. Stock splitting changes face/par values, requiring proportional FNO contract splits.</p>
+                                    <div class="bg-light border p-3 rounded mb-3 font-monospace">
+                                        <div class="fw-bold text-dark text-uppercase fs-7 mb-1">Formula parameters</div>
+                                        <div class="bg-dark text-success p-2.5 rounded text-xs mb-1">New Strike = Old Strike / Split Ratio</div>
+                                        <div class="bg-dark text-success p-2.5 rounded text-xs mb-1">New Futures = Old Futures / Split Ratio</div>
+                                        <div class="bg-dark text-success p-2.5 rounded text-xs">New Lot = Old Lot * Split Ratio</div>
+                                    </div>
+                                    <p>Adjusted option premium contract values remain financially neutral before and after the ex-split date.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Accordion 3: Extraordinary Dividend -->
+                        <div class="accordion-item border border-grey-200 mb-3 rounded-xl overflow-hidden shadow-xs">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-bold py-3 text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDividend" aria-expanded="false">
+                                    <span class="me-2 text-primary">●</span> Dividend Adjustment Methodology
+                                </button>
+                            </h2>
+                            <div id="collapseDividend" class="accordion-collapse collapse" data-bs-parent="#methodologyAccordion">
+                                <div class="accordion-body text-secondary fs-7 leading-relaxed">
+                                    <p>Under SEBI and derivative guidelines, dividend adjustments rely entirely on dividend size percentages compared to the market closing stock rate:</p>
+                                    <ul class="list-group list-group-flush mb-3">
+                                        <li class="list-group-item bg-transparent text-secondary border-0 ps-0">
+                                            <strong>Regular Dividend:</strong> Payout represents less than 5% of share pricing. No adjustments are done.
+                                        </li>
+                                        <li class="list-group-item bg-transparent text-secondary border-0 ps-0">
+                                            <strong>Extraordinary Dividend:</strong> Dividend equals or exceeds 5% of pre-event price.
+                                        </li>
+                                    </ul>
+                                    <div class="bg-light border p-3 rounded font-monospace">
+                                        <div class="fw-bold text-dark text-uppercase fs-7 mb-1">Adjusment Rules</div>
+                                        <div class="bg-dark text-success p-2.5 rounded text-xs mb-1">Adjusted Strike Price = Strike Price - Dividend Amount</div>
+                                        <div class="bg-dark text-success p-2.5 rounded text-xs">Adjusted Futures Price = Settlement Price - Dividend Amount</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Accordion 4: Rights -->
+                        <div class="accordion-item border border-grey-200 mb-3 rounded-xl overflow-hidden shadow-xs">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed fw-bold py-3 text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRights" aria-expanded="false">
+                                    <span class="me-2 text-primary">●</span> Rights Issue Methodology
+                                </button>
+                            </h2>
+                            <div id="collapseRights" class="accordion-collapse collapse" data-bs-parent="#methodologyAccordion">
+                                <div class="accordion-body text-secondary fs-7 leading-relaxed">
+                                    <p>Rights distributions require evaluating ex-rights pricing variables (Theoretical Ex-Rights Price, TERP) to balance discount incentives offered to current corporate share investors.</p>
+                                    <div class="bg-light border p-3 rounded font-monospace mb-3">
+                                        <div class="fw-bold text-dark text-uppercase fs-7 mb-2">Computational Steps</div>
+                                        <div class="bg-dark text-success p-2.5 rounded text-xs mb-1">TERP = [(Existing Shares × Cum Rights Price) + (Rights Shares × Rights Issue Price)] / (Existing + Rights Shares)</div>
+                                        <div class="bg-dark text-success p-2.5 rounded text-xs">Factor = TERP / Cum-Rights Price</div>
+                                    </div>
+                                    <p>Option contract premiums adjust by multiplying striking thresholds by the factor, while sizing variables shift conversely.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANE 3: EXAMPLES SECTION -->
+            <div class="tab-pane fade" id="examples-pane" role="tabpanel" tabindex="0">
+                <div class="bg-white border rounded-3 p-4 shadow-sm mb-4">
+                    <h2 class="h5 fw-bold text-dark"><i class="fa-solid fa-award text-primary me-2"></i>Real Industry Corporate Action Examples</h2>
+                    <p class="text-secondary mb-0">Select historical market examples to analyze step-by-step or instantly load them into active calculator modules.</p>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Example 1 -->
+                    <div class="col-md-6">
+                        <div class="card border border-slate-200 rounded-3 shadow-sm h-100 d-flex flex-column justify-content-between p-3">
+                            <div class="card-body">
+                                <span class="badge bg-primary bg-opacity-10 text-primary-emphasis mb-2 text-uppercase fs-7">Bonus Issue</span>
+                                <h3 class="card-title h6 fw-bold fs-6">POWERGRID Corporation</h3>
+                                <p class="card-text text-secondary fs-7">Company declared a 1:3 bonus issue (1 bonus share granted for every 3 existing held). Strike targets adjusted proportionally.</p>
+                                <div class="bg-light border rounded p-3 font-monospace my-3 text-secondary fs-7">
+                                    <div class="d-flex justify-content-between"><span>Factor:</span><span class="fw-bold">1.333333</span></div>
+                                    <div class="d-flex justify-content-between"><span>Old Strike:</span><span class="fw-bold">₹200.00</span></div>
+                                    <div class="d-flex justify-content-between border-top border-secondary border-opacity-10 pt-2 text-primary fw-bold"><span>New Strike:</span><span>₹150.00</span></div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-dark btn-sm w-100" onclick="loadPowergrid()">Apply to Calculator</button>
+                        </div>
+                    </div>
+
+                    <!-- Example 2 -->
+                    <div class="col-md-6">
+                        <div class="card border border-slate-200 rounded-3 shadow-sm h-100 d-flex flex-column justify-content-between p-3">
+                            <div class="card-body">
+                                <span class="badge bg-primary bg-opacity-10 text-primary-emphasis mb-2 text-uppercase fs-7">Stock Split</span>
+                                <h3 class="card-title h6 fw-bold fs-6">IPCA Laboratories</h3>
+                                <p class="card-text text-secondary fs-7">Stock split from face value of ₹2 to ₹1 (effective 2:1 split). Derivative contracts doubled their lot limits.</p>
+                                <div class="bg-light border rounded p-3 font-monospace my-3 text-secondary fs-7">
+                                    <div class="d-flex justify-content-between"><span>Ratio:</span><span class="fw-bold">2.00</span></div>
+                                    <div class="d-flex justify-content-between"><span>Old Strike:</span><span class="fw-bold">₹5000.00</span></div>
+                                    <div class="d-flex justify-content-between border-top border-secondary border-opacity-10 pt-2 text-primary fw-bold"><span>New Strike:</span><span>₹2500.00</span></div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-dark btn-sm w-100" onclick="loadIpcalab()">Apply to Calculator</button>
+                        </div>
+                    </div>
+
+                    <!-- Example 3 -->
+                    <div class="col-md-6">
+                        <div class="card border border-slate-200 rounded-3 shadow-sm h-100 d-flex flex-column justify-content-between p-3">
+                            <div class="card-body">
+                                <span class="badge bg-primary bg-opacity-10 text-primary-emphasis mb-2 text-uppercase fs-7">Extraordinary Dividend</span>
+                                <h3 class="card-title h6 fw-bold fs-6">Hindustan Petroleum (HINDPETRO)</h3>
+                                <p class="card-text text-secondary fs-7">Declared ₹22.75 dividend with stock trades around ₹310. Represents extraordinary distribution status (> 5% of base price).</p>
+                                <div class="bg-light border rounded p-3 font-monospace my-3 text-secondary fs-7">
+                                    <div class="d-flex justify-content-between"><span>Dividend:</span><span class="fw-bold">₹22.75</span></div>
+                                    <div class="d-flex justify-content-between"><span>Old Strike:</span><span class="fw-bold">₹300.00</span></div>
+                                    <div class="d-flex justify-content-between border-top border-secondary border-opacity-10 pt-2 text-primary fw-bold"><span>New Strike:</span><span>₹277.25</span></div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-dark btn-sm w-100" onclick="loadHindpetro()">Apply to Calculator</button>
+                        </div>
+                    </div>
+
+                    <!-- Example 4 -->
+                    <div class="col-md-6">
+                        <div class="card border border-slate-200 rounded-3 shadow-sm h-100 d-flex flex-column justify-content-between p-3">
+                            <div class="card-body">
+                                <span class="badge bg-primary bg-opacity-10 text-primary-emphasis mb-2 text-uppercase fs-7">Rights Issue</span>
+                                <h3 class="card-title h6 fw-bold fs-6">Indian Hotels (INDHOTEL)</h3>
+                                <p class="card-text text-secondary fs-7">Offered 1 share for every 9 existing shares priced at ₹104.50 (against cum price of ₹150.00). Factor computed via TERP formulation.</p>
+                                <div class="bg-light border rounded p-3 font-monospace my-3 text-secondary fs-7">
+                                    <div class="d-flex justify-content-between"><span>TERP:</span><span class="fw-bold">₹145.45</span></div>
+                                    <div class="d-flex justify-content-between"><span>Factor:</span><span class="fw-bold">0.969670</span></div>
+                                    <div class="d-flex justify-content-between border-top border-secondary border-opacity-10 pt-2 text-primary fw-bold"><span>New Strike (Old ₹180):</span><span>₹174.54</span></div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-dark btn-sm w-100" onclick="loadIndhotel()">Apply to Calculator</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-secondary py-5 mt-5">
+        <div class="container text-center fs-7">
+            <p class="text-white mb-2 fw-bold">Corporate Action Calculator (FNO Adjustments Methodology & Examples)</p>
+            <p class="mb-0">Premium financial analytics dashboard tool aligned with regulatory standard trading policies.</p>
+            <span class="text-muted d-block mt-3" style="font-size: 11px;">Version 1.2.0 • Licensed Workspace Utility</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 bundle and JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/calculator.js') }}"></script>
+</body>
+</html>
