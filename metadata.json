@@ -1,0 +1,6 @@
+{
+  "name": "Corporate Action Calculator",
+  "description": "Calculate F&O adjustments for corporate actions such as Bonus Issues, Stock Splits, Dividends, and Rights Issues with detailed step-by-step methodologies and real world examples.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
